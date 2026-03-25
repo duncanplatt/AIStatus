@@ -6,12 +6,12 @@ export default function Home() {
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <Dashboard />
 
-      <footer className="mt-12 border-t border-card-border pt-6 text-xs text-muted/80">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
+      <footer className="mt-12 border-t border-card-border pt-6 pb-12 sm:pb-6 text-xs text-muted/80">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1.5 text-center sm:text-left">
             <p className="font-medium text-foreground">AI Status</p>
             <p>Independent LLM status monitoring</p>
-            <p className="flex items-center gap-1.5">
+            <p className="flex items-center justify-center sm:justify-start gap-1.5">
               <a
                 href="https://github.com/duncanplatt/AIStatus/blob/main/LICENSE.md"
                 target="_blank"
@@ -30,8 +30,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="space-y-1 sm:text-right">
-            <p className="flex items-center gap-2 sm:justify-end">
+          <div className="space-y-1.5 text-center sm:text-right">
+            <p className="flex items-center justify-center gap-2 sm:justify-end">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -58,7 +58,7 @@ export default function Home() {
                 Duncan Platt
               </a>
             </p>
-            <p className="flex items-center gap-1 sm:justify-end flex-wrap">
+            <p className="flex items-center justify-center gap-1 sm:justify-end flex-wrap">
               <span>Every check is a real API call &mdash;</span>
               <a
                 href="https://github.com/sponsors/duncanplatt"

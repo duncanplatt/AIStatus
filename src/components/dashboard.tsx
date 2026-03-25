@@ -8,6 +8,7 @@ import type {
   ProbeResult,
   ServiceStatusLevel,
 } from "@/lib/types";
+import Image from "next/image";
 import { ProviderCard } from "./provider-card";
 import { ProviderSkeleton } from "./provider-skeleton";
 import { ThemeToggle } from "./theme-toggle";
@@ -231,24 +232,24 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
 
   return (
     <>
-      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <header className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">AI Status</h1>
           <p className={`mt-1 text-lg ${summaryColors[summary.level]}`}>
             {summary.label}
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between sm:justify-end gap-4">
           <div className="flex items-center gap-2 text-sm text-muted">
             {isStale && checkedAt && (
               <span className="flex items-center gap-1.5 text-status-yellow">
                 <span className="inline-block h-2 w-2 rounded-full bg-status-yellow animate-pulse-dot" />
-                Refreshing&hellip;
+                <span className="hidden sm:inline">Refreshing&hellip;</span>
               </span>
             )}
             {checkedAt && (
               <span>
-                Last checked{" "}
+                <span className="hidden sm:inline">Last checked </span>
                 <time dateTime={checkedAt} className="font-mono">
                   {agoText}
                 </time>
@@ -259,7 +260,53 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
         </div>
       </header>
 
-      <div className="grid gap-x-4 gap-y-0 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Mobile Quick Navigation Pills */}
+      <div className="mb-6 flex justify-between gap-2 overflow-x-auto pb-2 sm:hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4 snap-x">
+        {PROVIDER_SLUGS.map((slug, i) => {
+          const provider = mergedProviders[i];
+          const status = provider?.overall_status;
+          const isDown = status === "major_outage";
+          const isDegraded =
+            status === "partial_outage" || status === "degraded_performance";
+          const isUp = status === "operational";
+
+          const colorClass = isDown
+            ? "bg-status-red/10 border-status-red/20 text-status-red"
+            : isDegraded
+              ? "bg-status-orange/10 border-status-orange/20 text-status-orange"
+              : isUp
+                ? "bg-status-green/10 border-status-green/20 text-status-green"
+                : "bg-muted/10 border-muted/20 text-muted";
+
+          const name =
+            provider?.name || slug.charAt(0).toUpperCase() + slug.slice(1);
+          const icon = provider?.icon || `/icons/${slug}.svg`;
+
+          return (
+            <button
+              key={`pill-${slug}`}
+              onClick={() => {
+                document.getElementById(slug)?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
+              className={`flex flex-1 justify-center snap-start items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all active:scale-95 ${colorClass}`}
+            >
+              <Image
+                src={icon}
+                alt={name}
+                width={16}
+                height={16}
+                className={slug !== "google" ? "dark:invert opacity-80" : "opacity-80"}
+              />
+              {name}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {PROVIDER_SLUGS.map((slug, i) => {
           const provider = mergedProviders[i];
           return provider ? (
@@ -269,7 +316,7 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
               probesLoading={!probesLoaded.has(slug)}
             />
           ) : (
-            <ProviderSkeleton key={slug} />
+            <ProviderSkeleton key={slug} slug={slug} />
           );
         })}
       </div>

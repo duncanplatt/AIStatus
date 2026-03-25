@@ -188,7 +188,7 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
         <span className="text-sm font-medium truncate transition-colors group-hover:text-foreground">
           {probe.display_name}
         </span>
-        <span className="text-xs text-muted/60 shrink-0">
+        <span className="hidden sm:inline text-xs text-muted/60 shrink-0">
           {probe.tier === "fast" ? "Fast" : "Flagship"}
         </span>
       </div>
@@ -211,7 +211,7 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
                 {probe.http_status}
               </span>
             )}
-            <span className="truncate max-w-48">
+            <span className="truncate max-w-32 sm:max-w-48">
               {probe.error ?? "Failed"}
             </span>
           </span>
@@ -299,7 +299,8 @@ export function ProviderCard({
 
   return (
     <div
-      className={`row-span-4 grid grid-rows-subgrid gap-0 rounded-2xl border bg-card p-6 transition-all hover:shadow-lg animate-in fade-in duration-300 ${borderClass}`}
+      id={provider.slug}
+      className={`scroll-mt-6 row-span-4 grid grid-rows-subgrid gap-0 rounded-2xl border bg-card p-5 sm:p-6 transition-all hover:shadow-lg animate-in fade-in duration-300 ${borderClass}`}
     >
       {/* Row 1: Header */}
       <div className="pb-4 flex items-center justify-between">
@@ -320,13 +321,20 @@ export function ProviderCard({
       <div className={hasProbes || probesLoading ? "pb-4 space-y-1.5" : ""}>
         {probesLoading ? (
           <>
-            <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
+            <h3 className="text-xs font-medium uppercase tracking-wide text-muted mb-3">
               Our Checks
             </h3>
-            <div className="grid gap-1.5 animate-pulse">
-              <div className="h-3 w-3/4 rounded bg-card-border" />
-              <div className="h-3 w-2/3 rounded bg-card-border" />
-              <div className="h-3 w-1/2 rounded bg-card-border" />
+            <div className="grid gap-0.5 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between py-1">
+                  <div className="flex items-center gap-2 w-full">
+                    <div className="h-2 w-2 rounded-full bg-card-border shrink-0" />
+                    <div className={`h-4 rounded bg-card-border ${i === 1 ? 'w-1/3' : i === 2 ? 'w-1/4' : 'w-2/5'}`} />
+                    <div className="h-3 w-12 rounded bg-card-border ml-2" />
+                  </div>
+                  <div className="h-4 w-10 rounded bg-card-border shrink-0" />
+                </div>
+              ))}
             </div>
           </>
         ) : hasProbes ? (
