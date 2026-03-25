@@ -112,15 +112,20 @@ function parseErrorBody(raw: string): string {
   return raw.slice(0, 80);
 }
 
+const PROBE_TIMEOUT_MS = 3100;
+
 async function probeModel(
   tier: "fast" | "flagship",
   model: string,
   displayName: string,
-  fn: () => Promise<Response>
+  fn: (signal: AbortSignal) => Promise<Response>
 ): Promise<ProbeResult> {
   const start = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
-    const res = await fn();
+    const res = await fn(controller.signal);
+    clearTimeout(timer);
     const latency = Date.now() - start;
     if (!res.ok) {
       const body = await res.text().catch(() => "");
@@ -139,19 +144,22 @@ async function probeModel(
       display_name: displayName,
       tier,
       success: true,
-      latency_ms: Date.now() - start,
+      latency_ms: latency,
       http_status: res.status,
       error: null,
     };
   } catch (err) {
+    clearTimeout(timer);
+    const latency = Date.now() - start;
+    const isTimeout = controller.signal.aborted;
     return {
       model,
       display_name: displayName,
       tier,
       success: false,
-      latency_ms: Date.now() - start,
+      latency_ms: latency,
       http_status: null,
-      error: err instanceof Error ? err.message : "Unknown error",
+      error: isTimeout ? "Timeout" : (err instanceof Error ? err.message : "Unknown error"),
     };
   }
 }
@@ -162,7 +170,7 @@ function probeOpenAI(
   displayName: string,
   tier: "fast" | "flagship"
 ): Promise<ProbeResult> {
-  return probeModel(tier, model, displayName, () =>
+  return probeModel(tier, model, displayName, (signal) =>
     fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -176,6 +184,7 @@ function probeOpenAI(
         store: false,
       }),
       cache: "no-store",
+      signal,
     })
   );
 }
@@ -186,7 +195,7 @@ function probeAnthropic(
   displayName: string,
   tier: "fast" | "flagship"
 ): Promise<ProbeResult> {
-  return probeModel(tier, model, displayName, () =>
+  return probeModel(tier, model, displayName, (signal) =>
     fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -200,6 +209,7 @@ function probeAnthropic(
         max_tokens: 1,
       }),
       cache: "no-store",
+      signal,
     })
   );
 }
@@ -211,7 +221,7 @@ function probeGoogle(
   tier: "fast" | "flagship"
 ): Promise<ProbeResult> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  return probeModel(tier, model, displayName, () =>
+  return probeModel(tier, model, displayName, (signal) =>
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -220,6 +230,7 @@ function probeGoogle(
         generationConfig: { maxOutputTokens: 1 },
       }),
       cache: "no-store",
+      signal,
     })
   );
 }

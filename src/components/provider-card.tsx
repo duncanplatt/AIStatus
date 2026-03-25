@@ -178,7 +178,7 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
       <div className="flex items-center gap-1.5 shrink-0">
         {probe.success ? (
           <span className={`font-mono text-sm ${latencyColor}`}>
-            {probe.latency_ms}ms
+            {probe.latency_ms >= 3000 ? "3s+" : `${probe.latency_ms}ms`}
           </span>
         ) : (
           <span
