@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import {
   fetchOpenAIStatus,
   fetchAnthropicStatus,
@@ -10,28 +9,16 @@ import {
 import { PROVIDER_SLUGS } from "./types";
 import type { ProviderStatus, ProbeResult, StatusData } from "./types";
 
-const STATUS_REVALIDATE = Number(process.env.STATUS_REVALIDATE) || 60;
-
-// Status caches (fast — status page JSON only, uses Data Cache)
-const getCachedOpenAIStatus = unstable_cache(fetchOpenAIStatus, ["status-openai"], {
-  revalidate: STATUS_REVALIDATE,
-});
-const getCachedAnthropicStatus = unstable_cache(fetchAnthropicStatus, ["status-anthropic"], {
-  revalidate: STATUS_REVALIDATE,
-});
-const getCachedGoogleStatus = unstable_cache(fetchGoogleStatus, ["status-google"], {
-  revalidate: STATUS_REVALIDATE,
-});
+// No unstable_cache — all caching is handled by Vercel CDN (s-maxage on
+// each route) and Cloudflare in front. This avoids Vercel Data Cache
+// inconsistency that caused stale/missing data across edge nodes.
 
 export const statusFetchers: Record<string, () => Promise<ProviderStatus>> = {
-  openai: getCachedOpenAIStatus,
-  anthropic: getCachedAnthropicStatus,
-  google: getCachedGoogleStatus,
+  openai: fetchOpenAIStatus,
+  anthropic: fetchAnthropicStatus,
+  google: fetchGoogleStatus,
 };
 
-// Probe fetchers — no Data Cache (unstable_cache). Caching is handled by
-// Vercel CDN (s-maxage on the route) and Cloudflare in front. This avoids
-// Data Cache inconsistency that caused intermittent empty probe responses.
 export const probeFetchers: Record<string, () => Promise<ProbeResult[]>> = {
   openai: fetchOpenAIProbes,
   anthropic: fetchAnthropicProbes,
