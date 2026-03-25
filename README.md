@@ -4,7 +4,7 @@ Real-time status and latency monitoring for major LLM providers — OpenAI, Anth
 
 Combines official status page data with independent API probes to give you the full picture.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FBoldOrion%2FAIStatus&env=OPENAI_API_KEY,ANTHROPIC_API_KEY,GOOGLE_API_KEY&envDescription=API%20keys%20for%20active%20probing%20(all%20optional))
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%duncanplatt%2FAIStatus&env=OPENAI_API_KEY,ANTHROPIC_API_KEY,GOOGLE_API_KEY&envDescription=API%20keys%20for%20active%20probing%20(all%20optional))
 
 ## How It Works
 
@@ -26,7 +26,7 @@ Combines official status page data with independent API probes to give you the f
 ## Setup
 
 ```bash
-git clone https://github.com/BoldOrion/AIStatus.git
+git clone https://github.com/duncanplatt/AIStatus.git
 cd AIStatus
 npm install
 cp .env.example .env.local
