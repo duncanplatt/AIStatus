@@ -68,7 +68,7 @@ async function fetchStatuspage(apiUrl: string): Promise<{
     return { services: [], overall_status: "unknown", incidents: [] };
   }
 
-  const services: ServiceStatus[] = data.components
+  const services: ServiceStatus[] = (data.components ?? [])
     .filter((c) => !c.group)
     .map((c) => ({
       id: c.id,
@@ -76,7 +76,7 @@ async function fetchStatuspage(apiUrl: string): Promise<{
       status: normalizeStatuspageStatus(c.status),
     }));
 
-  const incidents: Incident[] = data.incidents.map((inc) => ({
+  const incidents: Incident[] = (data.incidents ?? []).map((inc) => ({
     title: inc.name,
     status: inc.status,
     impact: inc.impact,
@@ -86,7 +86,7 @@ async function fetchStatuspage(apiUrl: string): Promise<{
 
   return {
     services,
-    overall_status: overallFromIndicator(data.status.indicator),
+    overall_status: overallFromIndicator(data.status?.indicator),
     incidents,
   };
 }

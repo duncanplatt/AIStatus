@@ -154,6 +154,14 @@ function buildServiceGroups(
 }
 
 function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
+  const isQuotaError = !probe.success && probe.http_status === 429;
+
+  const dotClass = probe.success
+    ? "bg-status-green"
+    : isQuotaError
+      ? "bg-muted"
+      : "bg-status-red";
+
   const latencyColor = probe.success
     ? probe.latency_ms < 1000
       ? "text-status-green"
@@ -165,9 +173,18 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
   return (
     <div className="group flex items-center justify-between rounded-md -mx-2 px-2 py-1 gap-2 text-sm transition-colors hover:bg-muted/5">
       <div className="flex items-center gap-2 min-w-0">
-        <span
-          className={`inline-block h-2 w-2 shrink-0 rounded-full ${probe.success ? "bg-status-green" : "bg-status-red"}`}
-        />
+        {isQuotaError ? (
+          <span
+            className="inline-flex h-2 w-2 shrink-0 items-center justify-center text-[8px] font-bold leading-none text-muted"
+            title="Quota exceeded — unable to check"
+          >
+            ?
+          </span>
+        ) : (
+          <span
+            className={`inline-block h-2 w-2 shrink-0 rounded-full ${dotClass}`}
+          />
+        )}
         <span className="text-sm font-medium truncate transition-colors group-hover:text-foreground">
           {probe.display_name}
         </span>
@@ -179,6 +196,10 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
         {probe.success ? (
           <span className={`font-mono text-sm ${latencyColor}`}>
             {probe.latency_ms >= 3000 ? "3s+" : `${probe.latency_ms}ms`}
+          </span>
+        ) : isQuotaError ? (
+          <span className="text-xs text-muted" title="API quota exceeded">
+            Quota exceeded
           </span>
         ) : (
           <span
