@@ -1,7 +1,12 @@
 import { probeFetchers } from "@/lib/get-status";
+import { corsHeaders, handleOptions } from "@/lib/cors";
+
+export async function OPTIONS(req: Request) {
+  return handleOptions(req) ?? new Response(null, { status: 204 });
+}
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
@@ -15,6 +20,7 @@ export async function GET(
   return Response.json(probes, {
     headers: {
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      ...corsHeaders(req),
     },
   });
 }
