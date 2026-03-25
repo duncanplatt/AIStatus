@@ -87,10 +87,12 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
   const [agoText, setAgoText] = useState("");
   const [isStale, setIsStale] = useState(!initialData);
   const mountedRef = useRef(true);
+  const pendingProbesRef = useRef<Record<string, ProbeResult[]>>({});
 
   // On mount: fetch status (fast) then probes (slow) independently
   useEffect(() => {
     mountedRef.current = true;
+    pendingProbesRef.current = {};
 
     if (initialData) return;
 
@@ -99,11 +101,18 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
         const res = await fetch(`/api/status/${slug}`);
         if (!res.ok || !mountedRef.current) return;
         const data: ProviderStatus = await res.json();
+        const buffered = pendingProbesRef.current[slug];
+        if (buffered) delete pendingProbesRef.current[slug];
         setProviders((prev) => {
-          const next = { ...prev, [slug]: data };
+          const existing = prev[slug];
+          const probes = buffered ?? existing?.probes ?? data.probes;
+          const next = { ...prev, [slug]: { ...data, probes } };
           updateCheckedAt(next, setCheckedAt);
           return next;
         });
+        if (buffered) {
+          setProbesLoaded((prev) => new Set(prev).add(slug));
+        }
       } catch {
         // Will retry on next poll
       }
@@ -116,7 +125,10 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
         const probes: ProbeResult[] = await res.json();
         setProviders((prev) => {
           const existing = prev[slug];
-          if (!existing) return prev;
+          if (!existing) {
+            pendingProbesRef.current[slug] = probes;
+            return prev;
+          }
           return { ...prev, [slug]: { ...existing, probes } };
         });
         setProbesLoaded((prev) => new Set(prev).add(slug));
