@@ -160,7 +160,13 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
         }
         return next;
       });
-      setProbesLoaded(new Set(PROVIDER_SLUGS));
+      setProbesLoaded((prev) => {
+        const next = new Set(prev);
+        for (const p of data.providers) {
+          if (p.probes.length > 0) next.add(p.slug);
+        }
+        return next;
+      });
     } catch {
       // Will retry next interval
     }
