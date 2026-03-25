@@ -2,10 +2,16 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { PROVIDER_SLUGS } from "@/lib/types";
-import type { StatusData, ProviderStatus, ProbeResult, ServiceStatusLevel } from "@/lib/types";
+import type {
+  StatusData,
+  ProviderStatus,
+  ProbeResult,
+  ServiceStatusLevel,
+} from "@/lib/types";
 import { ProviderCard } from "./provider-card";
 import { ProviderSkeleton } from "./provider-skeleton";
 import { ThemeToggle } from "./theme-toggle";
+
 const FRESH_INTERVAL = 30_000;
 const STALE_INTERVAL = 10_000;
 const STALE_THRESHOLD = 2 * 60 * 1000;
@@ -25,7 +31,7 @@ function overallSummary(providers: ProviderStatus[]): {
   level: ServiceStatusLevel;
 } {
   if (providers.length === 0) {
-    return { label: "Checking systems…", level: "unknown" };
+    return { label: "Checking systems\u2026", level: "unknown" };
   }
   const statuses = providers.map((p) => p.overall_status);
   if (statuses.every((s) => s === "operational")) {
@@ -55,21 +61,10 @@ const summaryColors: Record<ServiceStatusLevel, string> = {
   unknown: "text-muted",
 };
 
-function updateCheckedAt(
-  providers: Record<string, ProviderStatus>,
-  setCheckedAt: (v: string) => void
-) {
-  const values = Object.values(providers);
-  if (values.length === 0) return;
-  const oldest = values.reduce(
-    (min, p) => (p.fetched_at < min ? p.fetched_at : min),
-    values[0].fetched_at
-  );
-  setCheckedAt(oldest);
-}
-
 export function Dashboard({ initialData }: { initialData?: StatusData }) {
-  const [providers, setProviders] = useState<Record<string, ProviderStatus>>(
+  // Status and probes are stored separately — no merge race conditions.
+  // They're combined at render time only.
+  const [statuses, setStatuses] = useState<Record<string, ProviderStatus>>(
     () => {
       const map: Record<string, ProviderStatus> = {};
       if (initialData) {
@@ -78,22 +73,28 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
       return map;
     }
   );
+  const [probes, setProbes] = useState<Record<string, ProbeResult[]>>(
+    () => {
+      const map: Record<string, ProbeResult[]> = {};
+      if (initialData) {
+        for (const p of initialData.providers) {
+          if (p.probes.length > 0) map[p.slug] = p.probes;
+        }
+      }
+      return map;
+    }
+  );
   const [probesLoaded, setProbesLoaded] = useState<Set<string>>(
     () => new Set(initialData ? PROVIDER_SLUGS : [])
   );
-  const [checkedAt, setCheckedAt] = useState(
-    initialData?.checked_at ?? ""
-  );
+  const [checkedAt, setCheckedAt] = useState(initialData?.checked_at ?? "");
   const [agoText, setAgoText] = useState("");
   const [isStale, setIsStale] = useState(!initialData);
   const mountedRef = useRef(true);
-  const pendingProbesRef = useRef<Record<string, ProbeResult[]>>({});
 
-  // On mount: fetch status (fast) then probes (slow) independently
+  // On mount: fetch status (fast) and probes (slow) independently
   useEffect(() => {
     mountedRef.current = true;
-    pendingProbesRef.current = {};
-
     if (initialData) return;
 
     PROVIDER_SLUGS.forEach(async (slug) => {
@@ -101,18 +102,18 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
         const res = await fetch(`/api/status/${slug}`);
         if (!res.ok || !mountedRef.current) return;
         const data: ProviderStatus = await res.json();
-        const buffered = pendingProbesRef.current[slug];
-        if (buffered) delete pendingProbesRef.current[slug];
-        setProviders((prev) => {
-          const existing = prev[slug];
-          const probes = buffered ?? existing?.probes ?? data.probes;
-          const next = { ...prev, [slug]: { ...data, probes } };
-          updateCheckedAt(next, setCheckedAt);
+        setStatuses((prev) => {
+          const next = { ...prev, [slug]: data };
+          const values = Object.values(next);
+          if (values.length > 0) {
+            const oldest = values.reduce(
+              (min, p) => (p.fetched_at < min ? p.fetched_at : min),
+              values[0].fetched_at
+            );
+            setCheckedAt(oldest);
+          }
           return next;
         });
-        if (buffered) {
-          setProbesLoaded((prev) => new Set(prev).add(slug));
-        }
       } catch {
         // Will retry on next poll
       }
@@ -122,15 +123,10 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
       try {
         const res = await fetch(`/api/probes/${slug}`);
         if (!res.ok || !mountedRef.current) return;
-        const probes: ProbeResult[] = await res.json();
-        setProviders((prev) => {
-          const existing = prev[slug];
-          if (!existing) {
-            pendingProbesRef.current[slug] = probes;
-            return prev;
-          }
-          return { ...prev, [slug]: { ...existing, probes } };
-        });
+        const data: ProbeResult[] = await res.json();
+        if (data.length > 0) {
+          setProbes((prev) => ({ ...prev, [slug]: data }));
+        }
         setProbesLoaded((prev) => new Set(prev).add(slug));
       } catch {
         setProbesLoaded((prev) => new Set(prev).add(slug));
@@ -142,24 +138,28 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
     };
   }, [initialData]);
 
-  // Polling: fetch aggregate (includes both status + probes)
+  // Polling: fetch aggregate endpoint
   const refresh = useCallback(async () => {
     try {
       const res = await fetch("/api/status");
       if (!res.ok) return;
       const data: StatusData = await res.json();
       setCheckedAt(data.checked_at);
-      setProviders((prev) => {
-        const next: Record<string, ProviderStatus> = {};
+
+      const nextStatuses: Record<string, ProviderStatus> = {};
+      for (const p of data.providers) {
+        nextStatuses[p.slug] = p;
+      }
+      setStatuses(nextStatuses);
+
+      setProbes((prev) => {
+        const next = { ...prev };
         for (const p of data.providers) {
-          const existing = prev[p.slug];
-          next[p.slug] = {
-            ...p,
-            probes: p.probes.length > 0 ? p.probes : (existing?.probes ?? []),
-          };
+          if (p.probes.length > 0) next[p.slug] = p.probes;
         }
         return next;
       });
+
       setProbesLoaded((prev) => {
         const next = new Set(prev);
         for (const p of data.providers) {
@@ -208,7 +208,6 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
     };
   }, [isStale, refresh]);
 
-  // Update "ago" text and staleness every second
   useEffect(() => {
     if (!checkedAt) return;
     const id = setInterval(() => {
@@ -220,8 +219,14 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
     return () => clearInterval(id);
   }, [checkedAt]);
 
-  const providerList = PROVIDER_SLUGS.map((slug) => providers[slug]);
-  const loadedProviders = providerList.filter(Boolean) as ProviderStatus[];
+  // Merge statuses + probes at render time — always uses latest of both
+  const mergedProviders = PROVIDER_SLUGS.map((slug) => {
+    const status = statuses[slug];
+    if (!status) return null;
+    const slugProbes = probes[slug];
+    return slugProbes ? { ...status, probes: slugProbes } : status;
+  });
+  const loadedProviders = mergedProviders.filter(Boolean) as ProviderStatus[];
   const summary = overallSummary(loadedProviders);
 
   return (
@@ -255,8 +260,8 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
       </header>
 
       <div className="grid gap-x-4 gap-y-0 sm:grid-cols-2 lg:grid-cols-3">
-        {PROVIDER_SLUGS.map((slug) => {
-          const provider = providers[slug];
+        {PROVIDER_SLUGS.map((slug, i) => {
+          const provider = mergedProviders[i];
           return provider ? (
             <ProviderCard
               key={slug}
