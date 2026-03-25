@@ -149,9 +149,17 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
       if (!res.ok) return;
       const data: StatusData = await res.json();
       setCheckedAt(data.checked_at);
-      const map: Record<string, ProviderStatus> = {};
-      for (const p of data.providers) map[p.slug] = p;
-      setProviders(map);
+      setProviders((prev) => {
+        const next: Record<string, ProviderStatus> = {};
+        for (const p of data.providers) {
+          const existing = prev[p.slug];
+          next[p.slug] = {
+            ...p,
+            probes: p.probes.length > 0 ? p.probes : (existing?.probes ?? []),
+          };
+        }
+        return next;
+      });
       setProbesLoaded(new Set(PROVIDER_SLUGS));
     } catch {
       // Will retry next interval
