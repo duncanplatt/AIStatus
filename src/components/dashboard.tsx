@@ -5,6 +5,7 @@ import { PROVIDER_SLUGS } from "@/lib/types";
 import type { StatusData, ProviderStatus, ProbeResult, ServiceStatusLevel } from "@/lib/types";
 import { ProviderCard } from "./provider-card";
 import { ProviderSkeleton } from "./provider-skeleton";
+import { ThemeToggle } from "./theme-toggle";
 const FRESH_INTERVAL = 30_000;
 const STALE_INTERVAL = 10_000;
 const STALE_THRESHOLD = 2 * 60 * 1000;
@@ -206,21 +207,24 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
             {summary.label}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted">
-          {isStale && checkedAt && (
-            <span className="flex items-center gap-1.5 text-status-yellow">
-              <span className="inline-block h-2 w-2 rounded-full bg-status-yellow animate-pulse-dot" />
-              Refreshing&hellip;
-            </span>
-          )}
-          {checkedAt && (
-            <span>
-              Last checked{" "}
-              <time dateTime={checkedAt} className="font-mono">
-                {agoText}
-              </time>
-            </span>
-          )}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-muted">
+            {isStale && checkedAt && (
+              <span className="flex items-center gap-1.5 text-status-yellow">
+                <span className="inline-block h-2 w-2 rounded-full bg-status-yellow animate-pulse-dot" />
+                Refreshing&hellip;
+              </span>
+            )}
+            {checkedAt && (
+              <span>
+                Last checked{" "}
+                <time dateTime={checkedAt} className="font-mono">
+                  {agoText}
+                </time>
+              </span>
+            )}
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 

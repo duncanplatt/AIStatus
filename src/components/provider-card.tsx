@@ -163,28 +163,30 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
     : "text-status-red";
 
   return (
-    <div className="flex items-center justify-between gap-2 text-sm">
+    <div className="group flex items-center justify-between rounded-md -mx-2 px-2 py-1 gap-2 text-sm transition-colors hover:bg-muted/5">
       <div className="flex items-center gap-2 min-w-0">
         <span
-          className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${probe.success ? "bg-status-green" : "bg-status-red"}`}
+          className={`inline-block h-2 w-2 shrink-0 rounded-full ${probe.success ? "bg-status-green" : "bg-status-red"}`}
         />
-        <span className="text-xs font-medium truncate">{probe.display_name}</span>
+        <span className="text-sm font-medium truncate transition-colors group-hover:text-foreground">
+          {probe.display_name}
+        </span>
         <span className="text-xs text-muted/60 shrink-0">
           {probe.tier === "fast" ? "Fast" : "Flagship"}
         </span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         {probe.success ? (
-          <span className={`font-mono text-xs ${latencyColor}`}>
+          <span className={`font-mono text-sm ${latencyColor}`}>
             {probe.latency_ms}ms
           </span>
         ) : (
           <span
-            className="inline-flex items-center gap-1 text-xs text-status-red"
+            className="inline-flex items-center gap-1 text-sm text-status-red"
             title={probe.error ?? "Failed"}
           >
             {probe.http_status && (
-              <span className="rounded bg-status-red/10 px-1 py-0.5 font-mono text-[10px] font-semibold text-status-red">
+              <span className="rounded bg-status-red/10 px-1 py-0.5 font-mono text-xs font-semibold text-status-red">
                 {probe.http_status}
               </span>
             )}
@@ -198,12 +200,14 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
   );
 }
 
-function ServiceRow({ svc }: { svc: ServiceStatus }) {
+function ServiceRow({ svc, isSubItem = false }: { svc: ServiceStatus; isSubItem?: boolean }) {
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="group flex items-center justify-between rounded-md -mx-2 px-2 py-1 text-sm transition-colors hover:bg-muted/5">
       <div className="flex items-center gap-2">
         <StatusDot status={svc.status} />
-        <span>{svc.name}</span>
+        <span className={`transition-colors group-hover:text-foreground ${isSubItem ? "text-muted" : ""}`}>
+          {svc.name}
+        </span>
       </div>
     </div>
   );
@@ -219,12 +223,12 @@ function ServiceList({ provider }: { provider: ProviderStatus }) {
           <div key={group.label}>
             <div className="flex items-center gap-2 text-sm">
               <StatusDot status={group.worstStatus} />
-              <span className="font-medium">{group.label}</span>
+              <span>{group.label}</span>
             </div>
             {group.troubled.length > 0 && (
               <div className="ml-4 mt-0.5 grid gap-0.5">
                 {group.troubled.map((svc) => (
-                  <ServiceRow key={svc.id} svc={svc} />
+                  <ServiceRow key={svc.id} svc={svc} isSubItem />
                 ))}
               </div>
             )}
@@ -263,9 +267,19 @@ export function ProviderCard({
 }) {
   const hasProbes = provider.probes.length > 0;
   const hasIncidents = provider.incidents.length > 0;
+  const isDown = provider.overall_status === "major_outage";
+  const isDegraded = provider.overall_status === "partial_outage" || provider.overall_status === "degraded_performance";
+
+  const borderClass = isDown
+    ? "border-status-red/30 shadow-[0_0_15px_rgba(239,68,68,0.05)]"
+    : isDegraded
+      ? "border-status-orange/30 shadow-[0_0_15px_rgba(249,115,22,0.05)]"
+      : "border-transparent shadow-[0_0_15px_rgba(0,0,0,0.03)] dark:shadow-none ring-1 ring-card-border";
 
   return (
-    <div className="row-span-4 grid grid-rows-subgrid gap-0 rounded-xl border border-card-border bg-card p-5 transition-shadow hover:shadow-md animate-in fade-in duration-300">
+    <div
+      className={`row-span-4 grid grid-rows-subgrid gap-0 rounded-2xl border bg-card p-6 transition-all hover:shadow-lg animate-in fade-in duration-300 ${borderClass}`}
+    >
       {/* Row 1: Header */}
       <div className="pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -274,7 +288,7 @@ export function ProviderCard({
             alt={provider.name}
             width={28}
             height={28}
-            className="dark:invert"
+            className={provider.slug === "google" ? "" : "dark:invert"}
           />
           <h2 className="text-lg font-semibold">{provider.name}</h2>
         </div>
@@ -299,7 +313,7 @@ export function ProviderCard({
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
               Our Checks
             </h3>
-            <div className="grid gap-1">
+            <div className="grid gap-0.5">
               {provider.probes.map((probe) => (
                 <ProbeRow key={probe.model} probe={probe} />
               ))}
@@ -325,22 +339,27 @@ export function ProviderCard({
             </h3>
             <div className="grid gap-2">
               {provider.incidents.map((inc, i) => (
-                <div key={`${inc.created_at}-${i}`} className="text-sm">
+                <div
+                  key={`${inc.created_at}-${i}`}
+                  className="rounded-md border border-status-orange/10 bg-status-orange/5 p-2.5 text-sm"
+                >
                   <div className="flex items-start justify-between gap-2">
-                    <span>{inc.title}</span>
+                    <span className="font-medium text-status-orange/90">
+                      {inc.title}
+                    </span>
                     {inc.url && (
                       <a
                         href={inc.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0 text-xs text-status-blue hover:underline"
+                        className="shrink-0 text-xs text-status-orange hover:underline"
                       >
-                        Details
+                        Details &rarr;
                       </a>
                     )}
                   </div>
-                  <span className="text-xs text-muted">
-                    {inc.status} &middot;{" "}
+                  <span className="mt-1 block text-xs text-muted">
+                    <span className="capitalize">{inc.status}</span> &middot;{" "}
                     {new Date(inc.created_at).toLocaleString()}
                   </span>
                 </div>
