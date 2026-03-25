@@ -42,16 +42,16 @@ export default function PrivacyPolicy() {
             >
               Cloudflare Web Analytics
             </a>{" "}
-            to understand how the site is used. We use both Cloudflare Web
-            Analytics and Cloudflare Real User Measurement (RUM). Neither uses
-            cookies, collects personal data, or tracks users across sites. They
-            collect aggregate metrics like page views, referrers, performance
-            timings, and country-level geography. No individual visitor can be
-            identified.
+            to understand how the site is used, and Cloudflare Real User
+            Measurement (RUM) to monitor site performance. Neither uses cookies,
+            collects personal data, or tracks users across sites. They collect
+            aggregate metrics like page views, referrers, performance timings,
+            and country-level geography. No individual visitor can be identified.
           </p>
           <p className="mt-2">
-            This analytics script is not loaded for visitors located in the
-            European Union.
+            While basic Web Analytics runs globally, the RUM performance
+            monitoring script is not loaded for visitors located in the European
+            Union.
           </p>
         </section>
 
