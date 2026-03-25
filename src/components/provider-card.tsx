@@ -367,11 +367,6 @@ export function ProviderCard({
             </div>
           </div>
         )}
-        {!hasProbes && !probesLoading && (
-          <p className="text-xs text-muted/60 italic">
-            No API key configured — showing official status only
-          </p>
-        )}
       </div>
     </div>
   );

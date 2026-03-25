@@ -11,9 +11,8 @@ import { PROVIDER_SLUGS } from "./types";
 import type { ProviderStatus, ProbeResult, StatusData } from "./types";
 
 const STATUS_REVALIDATE = Number(process.env.STATUS_REVALIDATE) || 60;
-const PROBES_REVALIDATE = Number(process.env.PROBES_REVALIDATE) || 300;
 
-// Status caches (fast — status page JSON only)
+// Status caches (fast — status page JSON only, uses Data Cache)
 const getCachedOpenAIStatus = unstable_cache(fetchOpenAIStatus, ["status-openai"], {
   revalidate: STATUS_REVALIDATE,
 });
@@ -24,27 +23,19 @@ const getCachedGoogleStatus = unstable_cache(fetchGoogleStatus, ["status-google"
   revalidate: STATUS_REVALIDATE,
 });
 
-// Probe caches (slow — actual API calls, cost tokens)
-const getCachedOpenAIProbes = unstable_cache(fetchOpenAIProbes, ["probes-openai"], {
-  revalidate: PROBES_REVALIDATE,
-});
-const getCachedAnthropicProbes = unstable_cache(fetchAnthropicProbes, ["probes-anthropic"], {
-  revalidate: PROBES_REVALIDATE,
-});
-const getCachedGoogleProbes = unstable_cache(fetchGoogleProbes, ["probes-google"], {
-  revalidate: PROBES_REVALIDATE,
-});
-
 export const statusFetchers: Record<string, () => Promise<ProviderStatus>> = {
   openai: getCachedOpenAIStatus,
   anthropic: getCachedAnthropicStatus,
   google: getCachedGoogleStatus,
 };
 
+// Probe fetchers — no Data Cache (unstable_cache). Caching is handled by
+// Vercel CDN (s-maxage on the route) and Cloudflare in front. This avoids
+// Data Cache inconsistency that caused intermittent empty probe responses.
 export const probeFetchers: Record<string, () => Promise<ProbeResult[]>> = {
-  openai: getCachedOpenAIProbes,
-  anthropic: getCachedAnthropicProbes,
-  google: getCachedGoogleProbes,
+  openai: fetchOpenAIProbes,
+  anthropic: fetchAnthropicProbes,
+  google: fetchGoogleProbes,
 };
 
 export { PROVIDER_SLUGS };
