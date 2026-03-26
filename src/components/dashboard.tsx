@@ -16,6 +16,8 @@ import { ThemeToggle } from "./theme-toggle";
 const FRESH_INTERVAL = 30_000;
 const STALE_INTERVAL = 10_000;
 const STALE_THRESHOLD = 2 * 60 * 1000;
+/** If the tab was hidden at least this long, refetch on focus with cache bypass so data is not stale in the browser. */
+const LONG_TAB_HIDDEN_MS = 5 * 60 * 1000;
 
 function timeAgo(iso: string): string {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -106,6 +108,7 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
   const [agoText, setAgoText] = useState("");
   const [isStale, setIsStale] = useState(!initialData);
   const mountedRef = useRef(true);
+  const tabHiddenAtRef = useRef<number | null>(null);
 
   // On mount: fetch status (fast) and probes (slow) independently
   useEffect(() => {
@@ -170,9 +173,12 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
   }, [initialData]);
 
   // Polling: fetch aggregate endpoint
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (opts?: { bustCache?: boolean }) => {
     try {
-      const res = await fetch("/api/status");
+      const res = await fetch(
+        "/api/status",
+        opts?.bustCache ? { cache: "no-store" } : undefined
+      );
       if (!res.ok) return;
       const data: StatusData = await res.json();
       setCheckedAt(data.checked_at);
@@ -224,9 +230,15 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
 
     function onVisibilityChange() {
       if (document.hidden) {
+        tabHiddenAtRef.current = Date.now();
         stopPolling();
       } else {
-        refresh();
+        const hiddenAt = tabHiddenAtRef.current;
+        tabHiddenAtRef.current = null;
+        const awayMs =
+          hiddenAt != null ? Date.now() - hiddenAt : 0;
+        const longAbsence = awayMs >= LONG_TAB_HIDDEN_MS;
+        void refresh(longAbsence ? { bustCache: true } : undefined);
         startPolling();
       }
     }
