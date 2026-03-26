@@ -27,6 +27,17 @@ function timeAgo(iso: string): string {
   return `${hours}h ago`;
 }
 
+function formatDataTimestamp(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 function overallSummary(providers: ProviderStatus[]): {
   label: string;
   level: ServiceStatusLevel;
@@ -250,6 +261,14 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
   const loadedProviders = mergedProviders.filter(Boolean) as ProviderStatus[];
   const summary = overallSummary(loadedProviders);
 
+  const latestDataAt =
+    loadedProviders.length > 0
+      ? loadedProviders.reduce(
+          (max, p) => (p.fetched_at > max ? p.fetched_at : max),
+          loadedProviders[0].fetched_at
+        )
+      : "";
+
   return (
     <>
       <header className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
@@ -340,6 +359,32 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
             <ProviderSkeleton key={slug} slug={slug} />
           );
         })}
+      </div>
+
+      <div className="mt-10 border-t border-card-border pt-6 text-xs text-muted/90">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-8">
+          <p>
+            <span className="text-muted">Latest data from provider APIs </span>
+            {latestDataAt ? (
+              <>
+                <time
+                  dateTime={latestDataAt}
+                  className="font-mono text-foreground/90"
+                >
+                  {formatDataTimestamp(latestDataAt)}
+                </time>
+              </>
+            ) : (
+              <span className="text-muted">—</span>
+            )}
+          </p>
+          <p>
+            <span className="text-muted">Independent checks run from </span>
+            <span className="text-foreground/90">
+              {checkOrigin ?? "—"}
+            </span>
+          </p>
+        </div>
       </div>
     </>
   );

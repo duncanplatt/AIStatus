@@ -6,7 +6,7 @@ export default function Home() {
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <Dashboard />
 
-      <footer className="mt-12 border-t border-card-border pt-6 pb-12 sm:pb-6 text-xs text-muted/80">
+      <footer className="mt-2 pt-6 pb-12 sm:pb-6 text-xs text-muted/80">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5 text-center sm:text-left">
             <p className="font-medium text-foreground">AI Status</p>
