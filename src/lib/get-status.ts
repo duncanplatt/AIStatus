@@ -6,6 +6,7 @@ import {
   fetchAnthropicProbes,
   fetchGoogleProbes,
 } from "./providers";
+import { getCheckOriginLabel } from "./check-origin";
 import { PROVIDER_SLUGS } from "./types";
 import type { ProviderStatus, ProbeResult, StatusData } from "./types";
 
@@ -42,5 +43,10 @@ export async function getStatus(): Promise<StatusData> {
     (min, p) => (p.fetched_at < min ? p.fetched_at : min),
     providers[0]?.fetched_at ?? new Date().toISOString()
   );
-  return { checked_at: oldest, providers };
+  const check_origin = getCheckOriginLabel();
+  return {
+    checked_at: oldest,
+    ...(check_origin ? { check_origin } : {}),
+    providers,
+  };
 }

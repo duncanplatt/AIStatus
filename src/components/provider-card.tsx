@@ -1,6 +1,30 @@
+import type { ReactNode } from "react";
 import type { ProviderStatus, ServiceStatus, ServiceStatusLevel } from "@/lib/types";
 import { StatusDot, StatusBadge } from "./status-dot";
+import { Tooltip } from "./tooltip";
 import Image from "next/image";
+
+function probeReachabilityHint(checkOrigin?: string): ReactNode {
+  return (
+    <span className="block leading-relaxed space-y-2">
+      <span className="block">
+        <span className="font-medium">OK</span>, <span className="font-medium">Slow</span>, and{" "}
+        <span className="font-medium">Very slow</span> describe round-trip time in terms of{" "}
+        <span className="font-medium">real-time, conversational</span> replies—quick
+        back-and-forth chat—not batch jobs, long generations, or offline workloads.
+      </span>
+      <span className="block">
+        {checkOrigin ? (
+          <>
+            Checks run from <span className="font-medium">{checkOrigin}</span>.{" "}
+          </>
+        ) : null}
+        Time is measured from our hosting region, not from your device, so it
+        does not reflect the latency you would see.
+      </span>
+    </span>
+  );
+}
 
 const STATUS_SEVERITY: Record<ServiceStatusLevel, number> = {
   major_outage: 0,
@@ -153,7 +177,13 @@ function buildServiceGroups(
   return groups;
 }
 
-function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
+function ProbeRow({
+  probe,
+  checkOrigin,
+}: {
+  probe: ProviderStatus["probes"][number];
+  checkOrigin?: string;
+}) {
   const isQuotaError = !probe.success && probe.http_status === 429;
 
   const dotClass = probe.success
@@ -162,13 +192,13 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
       ? "bg-muted"
       : "bg-status-red";
 
-  const latencyColor = probe.success
-    ? probe.latency_ms < 1000
-      ? "text-status-green"
-      : probe.latency_ms < 3000
-        ? "text-status-yellow"
-        : "text-status-orange"
-    : "text-status-red";
+  const reachabilityLabel = probe.success
+    ? probe.latency_ms < 2200
+      ? { text: "OK", className: "text-status-green" }
+      : probe.latency_ms < 4000
+        ? { text: "Slow", className: "text-status-yellow" }
+        : { text: "Very slow", className: "text-status-orange" }
+    : null;
 
   return (
     <div className="group flex items-center justify-between rounded-md -mx-2 px-2 py-1 gap-2 text-sm transition-colors hover:bg-muted/5">
@@ -193,28 +223,35 @@ function ProbeRow({ probe }: { probe: ProviderStatus["probes"][number] }) {
         </span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
-        {probe.success ? (
-          <span className={`font-mono text-sm ${latencyColor}`}>
-            {probe.latency_ms >= 3000 ? "3s+" : `${probe.latency_ms}ms`}
-          </span>
+        {probe.success && reachabilityLabel ? (
+          <Tooltip content={probeReachabilityHint(checkOrigin)}>
+            <span
+              className={`text-sm font-medium ${reachabilityLabel.className} cursor-default`}
+            >
+              {reachabilityLabel.text}
+            </span>
+          </Tooltip>
         ) : isQuotaError ? (
           <span className="text-xs text-muted" title="API quota exceeded">
             Quota exceeded
           </span>
         ) : (
-          <span
-            className="inline-flex items-center gap-1 text-sm text-status-red"
-            title={probe.error ?? "Failed"}
-          >
-            {probe.http_status && (
-              <span className="rounded bg-status-red/10 px-1 py-0.5 font-mono text-xs font-semibold text-status-red">
-                {probe.http_status}
+          <Tooltip
+            content={
+              <span className="flex items-center gap-1.5">
+                {probe.http_status && (
+                  <span className="rounded bg-background/20 px-1 py-0.5 font-mono text-[10px] font-semibold">
+                    {probe.http_status}
+                  </span>
+                )}
+                {probe.error ?? "Failed"}
               </span>
-            )}
-            <span className="truncate max-w-32 sm:max-w-48">
-              {probe.error ?? "Failed"}
+            }
+          >
+            <span className="rounded bg-status-red/10 px-1.5 py-0.5 text-xs font-medium text-status-red cursor-default">
+              Error
             </span>
-          </span>
+          </Tooltip>
         )}
       </div>
     </div>
@@ -282,9 +319,11 @@ function ServiceList({ provider }: { provider: ProviderStatus }) {
 export function ProviderCard({
   provider,
   probesLoading = false,
+  checkOrigin,
 }: {
   provider: ProviderStatus;
   probesLoading?: boolean;
+  checkOrigin?: string;
 }) {
   const hasProbes = provider.probes.length > 0;
   const hasIncidents = provider.incidents.length > 0;
@@ -344,7 +383,11 @@ export function ProviderCard({
             </h3>
             <div className="grid gap-0.5">
               {provider.probes.map((probe) => (
-                <ProbeRow key={probe.model} probe={probe} />
+                <ProbeRow
+                  key={probe.model}
+                  probe={probe}
+                  checkOrigin={checkOrigin}
+                />
               ))}
             </div>
           </>

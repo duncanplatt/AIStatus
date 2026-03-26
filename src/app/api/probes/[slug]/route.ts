@@ -1,3 +1,4 @@
+import { getCheckOriginLabel } from "@/lib/check-origin";
 import { probeFetchers } from "@/lib/get-status";
 import { corsHeaders, handleOptions } from "@/lib/cors";
 
@@ -17,10 +18,17 @@ export async function GET(
   }
 
   const probes = await fetcher();
-  return Response.json(probes, {
-    headers: {
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-      ...corsHeaders(req),
+  const check_origin = getCheckOriginLabel();
+  return Response.json(
+    {
+      probes,
+      ...(check_origin ? { check_origin } : {}),
     },
-  });
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        ...corsHeaders(req),
+      },
+    }
+  );
 }

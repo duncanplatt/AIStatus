@@ -112,7 +112,7 @@ function parseErrorBody(raw: string): string {
   return raw.slice(0, 80);
 }
 
-const PROBE_TIMEOUT_MS = 3100;
+const PROBE_TIMEOUT_MS = 10000;
 
 async function probeModel(
   tier: "fast" | "flagship",

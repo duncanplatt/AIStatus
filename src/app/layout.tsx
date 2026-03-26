@@ -17,11 +17,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://aistatus.net"),
   title: "AI Status — LLM Provider Dashboard",
   description:
-    "Real-time status and latency monitoring for OpenAI, Anthropic, and Google AI models.",
+    "Real-time operational status for OpenAI, Anthropic, and Google AI — plus independent API reachability checks.",
   openGraph: {
     title: "AI Status",
     description:
-      "Real-time status and latency monitoring for major LLM providers.",
+      "Real-time operational status for major LLM providers and independent API reachability checks.",
     url: "https://aistatus.net",
     siteName: "AI Status",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "AI Status" }],
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AI Status",
     description:
-      "Real-time status and latency monitoring for major LLM providers.",
+      "Real-time operational status for major LLM providers and independent API reachability checks.",
     images: ["/og.png"],
   },
   icons: {

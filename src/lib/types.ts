@@ -43,6 +43,8 @@ export interface ProviderStatus {
 
 export interface StatusData {
   checked_at: string;
+  /** Where probes execute (e.g. hosting region); optional human-readable string */
+  check_origin?: string;
   providers: ProviderStatus[];
 }
 

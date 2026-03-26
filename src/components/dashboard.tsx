@@ -89,6 +89,9 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
     () => new Set(initialData ? PROVIDER_SLUGS : [])
   );
   const [checkedAt, setCheckedAt] = useState(initialData?.checked_at ?? "");
+  const [checkOrigin, setCheckOrigin] = useState<string | undefined>(
+    initialData?.check_origin
+  );
   const [agoText, setAgoText] = useState("");
   const [isStale, setIsStale] = useState(!initialData);
   const mountedRef = useRef(true);
@@ -124,9 +127,25 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
       try {
         const res = await fetch(`/api/probes/${slug}`);
         if (!res.ok || !mountedRef.current) return;
-        const data: ProbeResult[] = await res.json();
-        if (data.length > 0) {
-          setProbes((prev) => ({ ...prev, [slug]: data }));
+        const raw: unknown = await res.json();
+        const list: ProbeResult[] = Array.isArray(raw)
+          ? raw
+          : raw &&
+              typeof raw === "object" &&
+              "probes" in raw &&
+              Array.isArray((raw as { probes: unknown }).probes)
+            ? (raw as { probes: ProbeResult[] }).probes
+            : [];
+        const origin =
+          raw &&
+          typeof raw === "object" &&
+          "check_origin" in raw &&
+          typeof (raw as { check_origin: unknown }).check_origin === "string"
+            ? (raw as { check_origin: string }).check_origin
+            : undefined;
+        if (origin) setCheckOrigin(origin);
+        if (list.length > 0) {
+          setProbes((prev) => ({ ...prev, [slug]: list }));
         }
         setProbesLoaded((prev) => new Set(prev).add(slug));
       } catch {
@@ -146,6 +165,7 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
       if (!res.ok) return;
       const data: StatusData = await res.json();
       setCheckedAt(data.checked_at);
+      if (data.check_origin) setCheckOrigin(data.check_origin);
 
       const nextStatuses: Record<string, ProviderStatus> = {};
       for (const p of data.providers) {
@@ -314,6 +334,7 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
               key={slug}
               provider={provider}
               probesLoading={!probesLoaded.has(slug)}
+              checkOrigin={checkOrigin}
             />
           ) : (
             <ProviderSkeleton key={slug} slug={slug} />
