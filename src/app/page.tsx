@@ -59,7 +59,7 @@ export default function Home() {
               </a>
             </p>
             <p className="flex items-center justify-center gap-1 sm:justify-end flex-wrap">
-              <span>Every check is a real API call &mdash;</span>
+              <span>Our checks use real tokens &mdash;</span>
               <a
                 href="https://github.com/sponsors/duncanplatt"
                 target="_blank"
