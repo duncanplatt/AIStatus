@@ -356,7 +356,7 @@ export async function fetchOpenAIProbes(): Promise<ProbeResult[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return [];
   return Promise.all([
-    probeOpenAI(apiKey, "gpt-5.4", "GPT 5.4", "flagship"),
+    probeOpenAI(apiKey, "gpt-5.5", "GPT 5.5", "flagship"),
     probeOpenAI(apiKey, "gpt-5.4-mini", "GPT 5.4 Mini", "flagship"),
     probeOpenAI(apiKey, "gpt-5.4-nano", "GPT 5.4 Nano", "fast"),
   ]);
@@ -366,7 +366,7 @@ export async function fetchAnthropicProbes(): Promise<ProbeResult[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return [];
   return Promise.all([
-    probeAnthropic(apiKey, "claude-opus-4-6", "Opus 4.6", "flagship"),
+    probeAnthropic(apiKey, "claude-opus-4-7", "Opus 4.7", "flagship"),
     probeAnthropic(apiKey, "claude-sonnet-4-6", "Sonnet 4.6", "flagship"),
     probeAnthropic(apiKey, "claude-haiku-4-5", "Haiku 4.6", "fast"),
   ]);
