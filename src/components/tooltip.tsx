@@ -9,6 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { createPopper, type Instance as PopperInstance } from "@popperjs/core";
+import { useIsClient } from "./use-is-client";
 
 interface TooltipProps {
   content: ReactNode;
@@ -22,20 +23,16 @@ export function Tooltip({
   placement = "bottom",
 }: TooltipProps) {
   const [visible, setVisible] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const isClient = useIsClient();
   const referenceRef = useRef<HTMLSpanElement>(null);
   const popperRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<PopperInstance | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const show = useCallback(() => setVisible(true), []);
   const hide = useCallback(() => setVisible(false), []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!isClient) return;
     const ref = referenceRef.current;
     const popper = popperRef.current;
     if (!ref || !popper) return;
@@ -52,7 +49,7 @@ export function Tooltip({
       instanceRef.current?.destroy();
       instanceRef.current = null;
     };
-  }, [placement, mounted]);
+  }, [placement, isClient]);
 
   useEffect(() => {
     if (visible) {
@@ -87,7 +84,7 @@ export function Tooltip({
       >
         {children}
       </span>
-      {mounted ? createPortal(tooltipLayer, document.body) : null}
+      {isClient ? createPortal(tooltipLayer, document.body) : null}
     </>
   );
 }

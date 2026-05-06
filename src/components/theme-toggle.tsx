@@ -3,16 +3,13 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useIsClient } from "./use-is-client";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
+  const isClient = useIsClient();
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
+  if (!isClient) {
     return (
       <button
         className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-card-border bg-card text-muted transition-colors hover:bg-muted/10 hover:text-foreground"

@@ -254,13 +254,17 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
 
   useEffect(() => {
     if (!checkedAt) return;
-    const id = setInterval(() => {
+    const updateAge = () => {
       const age = Date.now() - new Date(checkedAt).getTime();
       setIsStale(age > STALE_THRESHOLD);
       setAgoText(timeAgo(checkedAt));
-    }, 1000);
-    setAgoText(timeAgo(checkedAt));
-    return () => clearInterval(id);
+    };
+    const timeoutId = setTimeout(updateAge, 0);
+    const intervalId = setInterval(updateAge, 1000);
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
   }, [checkedAt]);
 
   // Merge statuses + probes at render time — always uses latest of both
