@@ -29,14 +29,20 @@ export const probeFetchers: Record<string, () => Promise<ProbeResult[]>> = {
 export { PROVIDER_SLUGS };
 
 export async function getStatus(): Promise<StatusData> {
-  const [statuses, allProbes] = await Promise.all([
+  const [statuses, probeResults] = await Promise.all([
     Promise.all(PROVIDER_SLUGS.map((slug) => statusFetchers[slug]())),
-    Promise.all(PROVIDER_SLUGS.map((slug) => probeFetchers[slug]())),
+    Promise.all(
+      PROVIDER_SLUGS.map(async (slug) => ({
+        probes: await probeFetchers[slug](),
+        checked_at: new Date().toISOString(),
+      }))
+    ),
   ]);
 
   const providers = statuses.map((status, i) => ({
     ...status,
-    probes: allProbes[i],
+    probes: probeResults[i].probes,
+    probes_checked_at: probeResults[i].checked_at,
   }));
 
   const oldest = providers.reduce(

@@ -19,6 +19,20 @@ const STALE_THRESHOLD = 2 * 60 * 1000;
 /** If the tab was hidden at least this long, refetch on focus with cache bypass so data is not stale in the browser. */
 const LONG_TAB_HIDDEN_MS = 5 * 60 * 1000;
 
+function formatDataTimestamp(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 function timeAgo(iso: string): string {
   const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (seconds < 5) return "just now";
@@ -27,17 +41,6 @@ function timeAgo(iso: string): string {
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   return `${hours}h ago`;
-}
-
-function formatDataTimestamp(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return iso;
-  }
 }
 
 function overallSummary(providers: ProviderStatus[]): {
@@ -93,6 +96,17 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
       if (initialData) {
         for (const p of initialData.providers) {
           if (p.probes.length > 0) map[p.slug] = p.probes;
+        }
+      }
+      return map;
+    }
+  );
+  const [probeCheckedAt, setProbeCheckedAt] = useState<Record<string, string>>(
+    () => {
+      const map: Record<string, string> = {};
+      if (initialData) {
+        for (const p of initialData.providers) {
+          if (p.probes_checked_at) map[p.slug] = p.probes_checked_at;
         }
       }
       return map;
@@ -157,10 +171,18 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
           typeof (raw as { check_origin: unknown }).check_origin === "string"
             ? (raw as { check_origin: string }).check_origin
             : undefined;
+        const checked_at =
+          raw &&
+          typeof raw === "object" &&
+          "checked_at" in raw &&
+          typeof (raw as { checked_at: unknown }).checked_at === "string"
+            ? (raw as { checked_at: string }).checked_at
+            : new Date().toISOString();
         if (origin) setCheckOrigin(origin);
         if (list.length > 0) {
           setProbes((prev) => ({ ...prev, [slug]: list }));
         }
+        setProbeCheckedAt((prev) => ({ ...prev, [slug]: checked_at }));
         setProbesLoaded((prev) => new Set(prev).add(slug));
       } catch {
         setProbesLoaded((prev) => new Set(prev).add(slug));
@@ -194,6 +216,14 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
         const next = { ...prev };
         for (const p of data.providers) {
           if (p.probes.length > 0) next[p.slug] = p.probes;
+        }
+        return next;
+      });
+
+      setProbeCheckedAt((prev) => {
+        const next = { ...prev };
+        for (const p of data.providers) {
+          if (p.probes_checked_at) next[p.slug] = p.probes_checked_at;
         }
         return next;
       });
@@ -254,13 +284,13 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
 
   useEffect(() => {
     if (!checkedAt) return;
-    const updateAge = () => {
+    const updateStaleState = () => {
       const age = Date.now() - new Date(checkedAt).getTime();
       setIsStale(age > STALE_THRESHOLD);
       setAgoText(timeAgo(checkedAt));
     };
-    const timeoutId = setTimeout(updateAge, 0);
-    const intervalId = setInterval(updateAge, 1000);
+    const timeoutId = setTimeout(updateStaleState, 0);
+    const intervalId = setInterval(updateStaleState, 1000);
     return () => {
       clearTimeout(timeoutId);
       clearInterval(intervalId);
@@ -346,6 +376,7 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
                   block: "start",
                 });
               }}
+              aria-label={`Jump to ${name} status`}
               className={`flex flex-1 justify-center snap-start items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all active:scale-95 ${colorClass}`}
             >
               <Image
@@ -369,6 +400,7 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
               key={slug}
               provider={provider}
               probesLoading={!probesLoaded.has(slug)}
+              probeCheckedAt={probeCheckedAt[slug]}
               checkOrigin={checkOrigin}
             />
           ) : (
@@ -377,10 +409,40 @@ export function Dashboard({ initialData }: { initialData?: StatusData }) {
         })}
       </div>
 
+      <section className="mt-8 rounded-2xl border border-card-border bg-card/60 p-5 text-sm text-muted sm:p-6">
+        <h2 className="text-base font-semibold text-foreground">
+          How checks work
+        </h2>
+        <div className="mt-3 grid gap-3 leading-relaxed sm:grid-cols-2 lg:grid-cols-4">
+          <p>
+            <span className="font-medium text-foreground">
+              Official status
+            </span>{" "}
+            comes from each provider status page and covers their published
+            services and incidents.
+          </p>
+          <p>
+            <span className="font-medium text-foreground">Our checks</span>{" "}
+            are tiny live API calls against selected models, so they can show
+            reachability even when a status page has not updated yet.
+          </p>
+          <p>
+            <span className="font-medium text-foreground">Speed labels</span>{" "}
+            are measured from this app&apos;s hosting region for conversational
+            replies, not from your device or for long-running jobs.
+          </p>
+          <p>
+            <span className="font-medium text-foreground">Quota errors</span>{" "}
+            mean this monitor could not complete a check; they do not always
+            mean the provider is down.
+          </p>
+        </div>
+      </section>
+
       <div className="mt-10 border-t border-card-border pt-6 text-xs text-muted/90">
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-8">
           <p>
-            <span className="text-muted">Latest data from provider APIs </span>
+            <span className="text-muted">Latest data from provider APIs retrieved </span>
             {latestDataAt ? (
               <>
                 <time

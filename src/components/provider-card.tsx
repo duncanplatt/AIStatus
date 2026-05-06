@@ -26,6 +26,20 @@ function probeReachabilityHint(checkOrigin?: string): ReactNode {
   );
 }
 
+function formatLocalTimestamp(iso?: string): string {
+  if (!iso) return "not available";
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "not available";
+
+  return date.toLocaleString(undefined, {
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 const STATUS_SEVERITY: Record<ServiceStatusLevel, number> = {
   major_outage: 0,
   partial_outage: 1,
@@ -316,13 +330,43 @@ function ServiceList({ provider }: { provider: ProviderStatus }) {
   );
 }
 
+function SectionHeading({
+  children,
+  timestamp,
+  fallback,
+}: {
+  children: ReactNode;
+  timestamp?: string;
+  fallback?: string;
+}) {
+  return (
+    <h3 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs font-medium uppercase tracking-wide text-muted">
+      <span>{children}</span>
+      {timestamp ? (
+        <time
+          dateTime={timestamp}
+          className="font-mono normal-case tracking-normal text-muted/70"
+        >
+          {formatLocalTimestamp(timestamp)}
+        </time>
+      ) : fallback ? (
+        <span className="font-mono normal-case tracking-normal text-muted/70">
+          {fallback}
+        </span>
+      ) : null}
+    </h3>
+  );
+}
+
 export function ProviderCard({
   provider,
   probesLoading = false,
+  probeCheckedAt,
   checkOrigin,
 }: {
   provider: ProviderStatus;
   probesLoading?: boolean;
+  probeCheckedAt?: string;
   checkOrigin?: string;
 }) {
   const hasProbes = provider.probes.length > 0;
@@ -342,7 +386,7 @@ export function ProviderCard({
       className={`scroll-mt-6 row-span-4 grid grid-rows-subgrid gap-0 rounded-2xl border bg-card p-5 sm:p-6 transition-all hover:shadow-lg animate-in fade-in duration-300 ${borderClass}`}
     >
       {/* Row 1: Header */}
-      <div className="pb-4 flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4">
         <div className="flex items-center gap-3">
           <Image
             src={provider.icon}
@@ -360,9 +404,7 @@ export function ProviderCard({
       <div className={hasProbes || probesLoading ? "pb-4 space-y-1.5" : ""}>
         {probesLoading ? (
           <>
-            <h3 className="text-xs font-medium uppercase tracking-wide text-muted mb-3">
-              Our Checks
-            </h3>
+            <SectionHeading fallback="loading">Our Checks</SectionHeading>
             <div className="grid gap-0.5 animate-pulse">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center justify-between py-1">
@@ -378,9 +420,9 @@ export function ProviderCard({
           </>
         ) : hasProbes ? (
           <>
-            <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
+            <SectionHeading timestamp={probeCheckedAt}>
               Our Checks
-            </h3>
+            </SectionHeading>
             <div className="grid gap-0.5">
               {provider.probes.map((probe) => (
                 <ProbeRow
@@ -396,9 +438,9 @@ export function ProviderCard({
 
       {/* Row 3: Services */}
       <div className="pb-4 space-y-1.5">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
+        <SectionHeading timestamp={provider.fetched_at}>
           Services
-        </h3>
+        </SectionHeading>
         <ServiceList provider={provider} />
       </div>
 

@@ -35,6 +35,7 @@ export interface ProviderStatus {
   icon: string;
   url: string;
   fetched_at: string;
+  probes_checked_at?: string;
   overall_status: ServiceStatusLevel;
   services: ServiceStatus[];
   probes: ProbeResult[];

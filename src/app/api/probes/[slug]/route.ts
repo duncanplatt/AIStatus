@@ -22,6 +22,7 @@ export async function GET(
   return Response.json(
     {
       probes,
+      checked_at: new Date().toISOString(),
       ...(check_origin ? { check_origin } : {}),
     },
     {
