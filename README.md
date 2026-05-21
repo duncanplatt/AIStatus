@@ -19,9 +19,9 @@ Combines official status page data with independent API probes to give you the f
 
 | Provider | Status Source | Models Probed |
 |----------|--------------|---------------|
-| OpenAI | status.openai.com | GPT 5.4, GPT 5.4 Mini, GPT 5.4 Nano |
-| Anthropic | status.anthropic.com | Opus 4.6, Sonnet 4.6, Haiku 4.5 |
-| Google | status.cloud.google.com | Gemini 3.1 Pro Preview, Gemini 3.1 Flash Preview |
+| OpenAI | status.openai.com | GPT 5.5, GPT 5.4 Mini, GPT 5.4 Nano |
+| Anthropic | status.anthropic.com | Opus 4.7, Sonnet 4.6, Haiku 4.5 |
+| Google | status.cloud.google.com | Gemini 3.1 Pro Preview, Gemini 3.5 Flash |
 
 ## Setup
 

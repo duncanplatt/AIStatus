@@ -377,6 +377,6 @@ export async function fetchGoogleProbes(): Promise<ProbeResult[]> {
   if (!apiKey) return [];
   return Promise.all([
     probeGoogle(apiKey, "gemini-3.1-pro-preview", "Gemini 3.1 Pro Preview", "flagship"),
-    probeGoogle(apiKey, "gemini-3.1-flash-lite-preview", "Gemini 3.1 Flash Preview", "fast"),
+    probeGoogle(apiKey, "gemini-3.5-flash", "Gemini 3.5 Flash", "fast"),
   ]);
 }
