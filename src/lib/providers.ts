@@ -366,7 +366,7 @@ export async function fetchAnthropicProbes(): Promise<ProbeResult[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return [];
   return Promise.all([
-    probeAnthropic(apiKey, "claude-opus-4-7", "Opus 4.7", "flagship"),
+    probeAnthropic(apiKey, "claude-opus-4-8", "Opus 4.8", "flagship"),
     probeAnthropic(apiKey, "claude-sonnet-4-6", "Sonnet 4.6", "flagship"),
     probeAnthropic(apiKey, "claude-haiku-4-5", "Haiku 4.6", "fast"),
   ]);
