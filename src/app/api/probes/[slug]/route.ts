@@ -1,6 +1,7 @@
 import { getCheckOriginLabel } from "@/lib/check-origin";
 import { probeFetchers } from "@/lib/get-status";
 import { corsHeaders, handleOptions } from "@/lib/cors";
+import { rejectQueryString } from "@/lib/query-guard";
 
 export async function OPTIONS(req: Request) {
   return handleOptions(req) ?? new Response(null, { status: 204 });
@@ -10,6 +11,9 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const rejected = rejectQueryString(req);
+  if (rejected) return rejected;
+
   const { slug } = await params;
   const fetcher = probeFetchers[slug];
 
