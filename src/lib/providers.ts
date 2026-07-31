@@ -356,9 +356,9 @@ export async function fetchOpenAIProbes(): Promise<ProbeResult[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return [];
   return Promise.all([
-    probeOpenAI(apiKey, "gpt-5.5", "GPT 5.5", "flagship"),
-    probeOpenAI(apiKey, "gpt-5.4-mini", "GPT 5.4 Mini", "flagship"),
-    probeOpenAI(apiKey, "gpt-5.4-nano", "GPT 5.4 Nano", "fast"),
+    probeOpenAI(apiKey, "gpt-5.6-sol", "GPT 5.6 Sol", "flagship"),
+    probeOpenAI(apiKey, "gpt-5.6-terra", "GPT 5.6 Terra", "flagship"),
+    probeOpenAI(apiKey, "gpt-5.6-luna", "GPT 5.6 Luna", "fast"),
   ]);
 }
 
@@ -367,7 +367,7 @@ export async function fetchAnthropicProbes(): Promise<ProbeResult[]> {
   if (!apiKey) return [];
   return Promise.all([
     probeAnthropic(apiKey, "claude-fable-5", "Fable 5", "flagship"),
-    probeAnthropic(apiKey, "claude-opus-4-8", "Opus 4.8", "flagship"),
+    probeAnthropic(apiKey, "claude-opus-5", "Opus 5", "flagship"),
     probeAnthropic(apiKey, "claude-sonnet-5", "Sonnet 5", "flagship"),
     probeAnthropic(apiKey, "claude-haiku-4-5", "Haiku 4.6", "fast"),
   ]);
@@ -378,6 +378,6 @@ export async function fetchGoogleProbes(): Promise<ProbeResult[]> {
   if (!apiKey) return [];
   return Promise.all([
     probeGoogle(apiKey, "gemini-3.1-pro-preview", "Gemini 3.1 Pro Preview", "flagship"),
-    probeGoogle(apiKey, "gemini-3.5-flash", "Gemini 3.5 Flash", "fast"),
+    probeGoogle(apiKey, "gemini-3.6-flash", "Gemini 3.6 Flash", "fast"),
   ]);
 }

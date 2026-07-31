@@ -26,8 +26,8 @@
   --color-status-orange: var(--orange);
   --color-status-red: var(--red);
   --color-status-blue: var(--blue);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 }
 
 .dark {
