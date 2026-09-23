@@ -5,6 +5,7 @@ import type {
   Incident,
   ProbeResult,
 } from "./types";
+import { PROBE_MODELS } from "./probe-models";
 
 // ---------------------------------------------------------------------------
 // Statuspage.io helper (shared by OpenAI and Anthropic)
@@ -355,29 +356,29 @@ export async function fetchGoogleStatus(): Promise<ProviderStatus> {
 export async function fetchOpenAIProbes(): Promise<ProbeResult[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return [];
-  return Promise.all([
-    probeOpenAI(apiKey, "gpt-5.6-sol", "GPT 5.6 Sol", "flagship"),
-    probeOpenAI(apiKey, "gpt-5.6-terra", "GPT 5.6 Terra", "flagship"),
-    probeOpenAI(apiKey, "gpt-5.6-luna", "GPT 5.6 Luna", "fast"),
-  ]);
+  return Promise.all(
+    PROBE_MODELS.openai.map((m) =>
+      probeOpenAI(apiKey, m.model, m.displayName, m.tier)
+    )
+  );
 }
 
 export async function fetchAnthropicProbes(): Promise<ProbeResult[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return [];
-  return Promise.all([
-    probeAnthropic(apiKey, "claude-fable-5", "Fable 5", "flagship"),
-    probeAnthropic(apiKey, "claude-opus-5", "Opus 5", "flagship"),
-    probeAnthropic(apiKey, "claude-sonnet-5", "Sonnet 5", "flagship"),
-    probeAnthropic(apiKey, "claude-haiku-4-5", "Haiku 4.6", "fast"),
-  ]);
+  return Promise.all(
+    PROBE_MODELS.anthropic.map((m) =>
+      probeAnthropic(apiKey, m.model, m.displayName, m.tier)
+    )
+  );
 }
 
 export async function fetchGoogleProbes(): Promise<ProbeResult[]> {
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) return [];
-  return Promise.all([
-    probeGoogle(apiKey, "gemini-3.1-pro-preview", "Gemini 3.1 Pro Preview", "flagship"),
-    probeGoogle(apiKey, "gemini-3.6-flash", "Gemini 3.6 Flash", "fast"),
-  ]);
+  return Promise.all(
+    PROBE_MODELS.google.map((m) =>
+      probeGoogle(apiKey, m.model, m.displayName, m.tier)
+    )
+  );
 }
