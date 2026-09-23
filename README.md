@@ -21,9 +21,9 @@ Combines official status page data with independent API probes to give you the f
 
 | Provider | Status Source | Models Probed |
 |----------|--------------|---------------|
-| OpenAI | status.openai.com | GPT 5.6 Sol, GPT 5.6 Terra, GPT 5.6 Luna |
-| Anthropic | status.anthropic.com | Fable 5, Opus 5, Sonnet 5, Haiku 4.6 |
-| Google | status.cloud.google.com | Gemini 3.1 Pro Preview, Gemini 3.6 Flash |
+| OpenAI | status.openai.com | GPT 6 Astra, GPT 6 Sol, GPT 6 Luna |
+| Anthropic | status.anthropic.com | Fable 5.1, Opus 5.5, Sonnet 5, Haiku 4.5 |
+| Google | status.cloud.google.com | Gemini 3.1 Pro Preview, Gemini 3.8 Flash |
 
 ## Setup
 
