@@ -22,7 +22,7 @@ export const PROBE_MODELS: Record<ProbeProvider, readonly ProbeModelEntry[]> = {
   anthropic: [
     { model: "claude-fable-5-1", displayName: "Fable 5.1", tier: "flagship" },
     { model: "claude-opus-5-5", displayName: "Opus 5.5", tier: "flagship" },
-    { model: "claude-sonnet-5", displayName: "Sonnet 5", tier: "flagship" },
+    { model: "claude-sonnet-5-5", displayName: "Sonnet 5.5", tier: "flagship" },
     { model: "claude-haiku-4-5", displayName: "Haiku 4.5", tier: "fast" },
   ],
   google: [
