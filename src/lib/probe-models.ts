@@ -26,7 +26,7 @@ export const PROBE_MODELS: Record<ProbeProvider, readonly ProbeModelEntry[]> = {
     { model: "claude-haiku-5-5", displayName: "Haiku 5.5", tier: "fast" },
   ],
   google: [
-    { model: "gemini-3.1-pro-preview", displayName: "Gemini 3.1 Pro Preview", tier: "flagship" },
+    { model: "gemini-4-argon", displayName: "Gemini 4 Argon", tier: "flagship" },
     { model: "gemini-3.8-flash", displayName: "Gemini 3.8 Flash", tier: "fast" },
   ],
 } as const;
