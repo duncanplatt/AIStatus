@@ -28,6 +28,6 @@ export const PROBE_MODELS: Record<ProbeProvider, readonly ProbeModelEntry[]> = {
   ],
   google: [
     { model: "gemini-4-argon", displayName: "Gemini 4 Argon", tier: "flagship" },
-    { model: "gemini-3.8-flash", displayName: "Gemini 3.8 Flash", tier: "fast" },
+    { model: "gemini-4-hydrogen", displayName: "Gemini 4 Hydrogen", tier: "fast" },
   ],
 } as const;
