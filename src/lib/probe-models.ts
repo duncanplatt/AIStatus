@@ -15,8 +15,8 @@ export interface ProbeModelEntry {
  */
 export const PROBE_MODELS: Record<ProbeProvider, readonly ProbeModelEntry[]> = {
   openai: [
-    { model: "gpt-6-astra", displayName: "GPT 6 Astra", tier: "flagship" },
-    { model: "gpt-6.1-sol", displayName: "GPT 6.1 Sol", tier: "flagship" },
+    { model: "gpt-6.2-astra", displayName: "GPT 6.2 Astra", tier: "flagship" },
+    { model: "gpt-6.2-sol", displayName: "GPT 6.2 Sol", tier: "flagship" },
     { model: "gpt-6.1-terra", displayName: "GPT 6.1 Terra", tier: "fast" },
     { model: "gpt-6-luna", displayName: "GPT 6 Luna", tier: "fast" },
   ],
